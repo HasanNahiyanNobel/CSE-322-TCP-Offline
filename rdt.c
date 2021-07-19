@@ -8,7 +8,7 @@
 
    This code should be used for PA2, unidirectional or bidirectional
    data transfer protocols (from A to B. Bidirectional transfer of data
-   is for extra credit and is not required).  Network properties:
+   is for extra credit and is not required). Network properties:
    - one way network delay averages five time units (longer if there
        are other messages in the channel for GBN), but can be larger
    - packets can be corrupted (either the header or the data portion)
@@ -50,7 +50,7 @@ void tolayer5(int AorB, char datasent[20]);
 
 /**
  * Called from layer 5, passed the data to be sent to other side.
- * @param message
+ * @param message A structure of type msg, containing data to be sent to the B-side.
  */
 void A_output(struct msg message) {
 
@@ -100,7 +100,7 @@ void B_input(struct pkt packet) {
  * Called when B's timer goes off.
  */
 void B_timerinterrupt(void) {
-	printf("  B_timerinterrupt: B doesn't have a timer. ignore.\n");
+	printf(" B_timerinterrupt: B doesn't have a timer. ignore.\n");
 }
 
 /**
@@ -120,8 +120,8 @@ The code below emulates the layer 3 and below network environment:
     - generates message to be sent (passed from later 5 to 4)
 
 THERE IS NOT REASON THAT ANY STUDENT SHOULD HAVE TO READ OR UNDERSTAND
-THE CODE BELOW.  YOU SHOULD NOT TOUCH, OR REFERENCE (in your code) ANY
-OF THE DATA STRUCTURES BELOW.  If you're interested in how I designed
+THE CODE BELOW. YOU SHOULD NOT TOUCH, OR REFERENCE (in your code) ANY
+OF THE DATA STRUCTURES BELOW. If you're interested in how I designed
 the emulator, you're welcome to look at the code - but again, you should have
 to, and you definitely should not have to modify
 *********************************************************************************/
@@ -250,10 +250,10 @@ void init() {
 	float sum, avg;
 	float jimsrand();
 
-	printf("-----  Stop and Wait Network Simulator Version 1.1 -------- \n\n");
+	printf("-------- Stop and Wait Network Simulator Version 1.1 --------\n\n");
 	printf("Enter the number of messages to simulate: ");
 	scanf("%d", &nsimmax);
-	printf("Enter  packet loss probability [enter 0.0 for no loss]:");
+	printf("Enter packet loss probability [enter 0.0 for no loss]:");
 	scanf("%f", &lossprob);
 	printf("Enter packet corruption probability [0.0 for no corruption]:");
 	scanf("%f", &corruptprob);
@@ -269,7 +269,7 @@ void init() {
 	avg = sum / 1000.0;
 	if (avg < 0.25 || avg > 0.75) {
 		printf("It is likely that random number generation on your machine\n");
-		printf("is different from what this emulator expects.  Please take\n");
+		printf("is different from what this emulator expects. Please take\n");
 		printf("a look at the routine jimsrand() in the emulator code. Sorry. \n");
 		exit(1);
 	}
@@ -283,7 +283,7 @@ void init() {
 }
 
 /**
- * jimsrand(): return a float in range [0,1].  The routine below is used to isolate all random number generation in one location.  We assume that the system-supplied rand() function return an int in the range [0,mmm]
+ * jimsrand(): return a float in range [0,1]. The routine below is used to isolate all random number generation in one location. We assume that the system-supplied rand() function return an int in the range [0,mmm]
  * @return
  */
 float jimsrand(void) {
