@@ -79,9 +79,9 @@ You are to write the procedures, `A_output()`, `A_input()`, `A_timerinterrupt()`
 
 You should choose a very large value for the average time between messages from sender’s layer5, so that your sender is never called while it still has an outstanding, unacknowledged message it is trying to send to the receiver. I’d suggest you choose a value of 1000. You should also perform a check in your sender to make sure that when `A_output()` is called, there is no message currently in transit. If there is, you can simply ignore (drop) the data being passed to the `A_output()` routine.
 
-You should put your procedures in a file called **rdt_1w05xyz**.c.
+You should put your procedures in a file called **rdt_1w05xyz.c**.
 
-You also need to provide a **.doc** file containing sample output from your code. The name of the file will be **output_1w05xyz**.doc. For sample output, your procedures might print out a message whenever an event occurs at your sender or receiver (a message/packet arrival, or a timer interrupt) as well as any action taken in response. You might want to hand in output for a run up to the point (approximately) when 10 messages have been ACK’ed correctly at the receiver, a loss probability of 0.1, and a corruption probability of 0.3, and a trace level of 2. You need to annotate your **.doc** file with ‘highlighting’ to show how your protocol correctly recovered from packet loss and corruption.
+You also need to provide a **.doc** file containing sample output from your code. The name of the file will be **output_1w05xyz.doc**. For sample output, your procedures might print out a message whenever an event occurs at your sender or receiver (a message/packet arrival, or a timer interrupt) as well as any action taken in response. You might want to hand in output for a run up to the point (approximately) when 10 messages have been ACK’ed correctly at the receiver, a loss probability of 0.1, and a corruption probability of 0.3, and a trace level of 2. You need to annotate your **.doc** file with ‘highlighting’ to show how your protocol correctly recovered from packet loss and corruption.
 
 
 
