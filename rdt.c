@@ -60,6 +60,7 @@ void tolayer5(int AorB, char datasent[20]);
  */
 void A_output(struct msg message) {
 	struct pkt packet;
+	*packet.payload = malloc(20 * sizeof(int));
 
 	packet.seqnum = g_a_seqnum++;   // Sets current seqnum and increases the global value.
 	packet.acknum = 0;              // Zero when NOT acknowledged.
@@ -104,10 +105,14 @@ void A_init(void) {
 
 /**
  * Called from layer 3, when a packet arrives for layer 4 at B.
- * @param packet
+ * @param packet The packet which arrived.
  */
 void B_input(struct pkt packet) {
-
+	struct msg message;
+	*message.data = malloc(20 * sizeof(int));
+	for (int i=0; i<strlen(packet.payload); i++) {
+		message.data[i] = packet.payload[i];
+	}
 }
 
 /**
@@ -265,15 +270,20 @@ void init() {
 
 	printf("-------- Stop and Wait Network Simulator Version 1.1 --------\n\n");
 	printf("Enter the number of messages to simulate: ");
-	scanf("%d", &nsimmax);
+	//scanf("%d", &nsimmax); // TODO: Uncomment this.
+	nsimmax = 2; //TODO: Remove this line.
 	printf("Enter packet loss probability [enter 0.0 for no loss]:");
-	scanf("%f", &lossprob);
+	//scanf("%f", &lossprob); // TODO: Uncomment this
+	lossprob = 0; //TODO: Remove this line.
 	printf("Enter packet corruption probability [0.0 for no corruption]:");
-	scanf("%f", &corruptprob);
+	//scanf("%f", &corruptprob); // TODO: Uncomment this
+	corruptprob = 0; //TODO: Remove this line.
 	printf("Enter average time between messages from sender's layer5 [ > 0.0]:");
-	scanf("%f", &lambda);
+	//scanf("%f", &lambda); // TODO: Uncomment this
+	lambda = 1000; //TODO: Remove this line.
 	printf("Enter TRACE:");
-	scanf("%d", &TRACE);
+	//scanf("%d", &TRACE); // TODO: Uncomment this
+	TRACE = 3; //TODO: Remove this line.
 
 	srand(9999); // Initialize random number generator
 	sum = 0.0; // Test random number generator for students */
