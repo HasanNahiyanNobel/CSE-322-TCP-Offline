@@ -19,6 +19,12 @@
 
 #define BIDIRECTIONAL 0 // Change to 1 if you're doing extra credit and write a routine called B_output
 
+// ********************************** GLOBAL VARIABLES **********************************
+/**
+ * Sequence number for A. Used by A_output.
+ */
+int g_a_seqnum = 0;
+
 /**
  * A "msg" is the data unit passed from layer 5 (teachers code) to layer 4 (students' code). It contains the data (characters) to be delivered to layer 5 via the students transport level protocol entities.
  */
@@ -53,7 +59,17 @@ void tolayer5(int AorB, char datasent[20]);
  * @param message A structure of type msg, containing data to be sent to the B-side.
  */
 void A_output(struct msg message) {
+	struct pkt packet;
 
+	packet.seqnum = g_a_seqnum++;   // Sets current seqnum and increases the global value.
+	packet.acknum = 0;              // Zero when NOT acknowledged.
+	packet.checksum = 0;            // Initially set to zero, incremented in loop below.
+	for (int i=0; i<strlen(message.data); i++) {
+		packet.checksum += message.data[i];
+		packet.payload[i] = message.data[i];
+	}
+
+	tolayer3(0, packet);
 }
 
 /**
