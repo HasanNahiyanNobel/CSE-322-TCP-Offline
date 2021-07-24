@@ -2,20 +2,20 @@
 #include <stdlib.h>
 #include <string.h>
 
-/*********************************************************************************
- ALTERNATING BIT AND GO-BACK-N NETWORK EMULATOR: SLIGHTLY MODIFIED
- FROM VERSION 1.1 of J.F.Kurose
-
-   This code should be used for PA2, unidirectional or bidirectional
-   data transfer protocols (from A to B. Bidirectional transfer of data
-   is for extra credit and is not required). Network properties:
-   - one way network delay averages five time units (longer if there
-       are other messages in the channel for GBN), but can be larger
-   - packets can be corrupted (either the header or the data portion)
-       or lost, according to user-defined probabilities
-   - packets will be delivered in the order in which they were sent
-       (although some can be lost).
-*********************************************************************************/
+// **************************************************************************************
+// ALTERNATING BIT AND GO-BACK-N NETWORK EMULATOR: SLIGHTLY MODIFIED
+// FROM VERSION 1.1 of J.F.Kurose
+//
+//  This code should be used for PA2, unidirectional or bidirectional
+//  data transfer protocols (from A to B. Bidirectional transfer of data
+//  is for extra credit and is not required). Network properties:
+//      - one way network delay averages five time units (longer if there
+//          are other messages in the channel for GBN), but can be larger
+//      - packets can be corrupted (either the header or the data portion)
+//          or lost, according to user-defined probabilities
+//      - packets will be delivered in the order in which they were sent
+//          (although some can be lost).
+// **************************************************************************************
 
 #define BIDIRECTIONAL 0 // Change to 1 if you're doing extra credit and write a routine called B_output
 
@@ -36,7 +36,7 @@ struct pkt {
 	char payload[20];
 };
 
-/********* FUNCTION PROTOTYPES. DEFINED IN THE LATER PART *********/
+// ****************** FUNCTION PROTOTYPES. DEFINED IN THE LATER PART. ******************
 
 void starttimer(int AorB, float increment);
 
@@ -46,7 +46,7 @@ void tolayer3(int AorB, struct pkt packet);
 
 void tolayer5(int AorB, char datasent[20]);
 
-/********* STUDENTS WRITE THE NEXT SEVEN ROUTINES *********/
+// *********************** STUDENTS WRITE THE NEXT SEVEN ROUTINES ***********************
 
 /**
  * Called from layer 5, passed the data to be sent to other side.
@@ -57,7 +57,7 @@ void A_output(struct msg message) {
 }
 
 /**
- * Need be completed only for extra credit.
+ * Need be completed only for extra credit. Note that with simplex transfer from a-to-B, there is no B_output().
  * @param message
  */
 void B_output(struct msg message) {
@@ -86,8 +86,6 @@ void A_init(void) {
 
 }
 
-/* Note that with simplex transfer from a-to-B, there is no B_output() */
-
 /**
  * Called from layer 3, when a packet arrives for layer 4 at B.
  * @param packet
@@ -110,21 +108,20 @@ void B_init(void) {
 
 }
 
-/*********************************************************************************
-********************** NETWORK EMULATION CODE STARTS BELOW ***********************
-The code below emulates the layer 3 and below network environment:
-    - emulates the transmission and delivery (possibly with bit-level corruption
-        and packet loss) of packets across the layer 3/4 interface
-    - handles the starting/stopping of a timer, and generates timer
-        interrupts (resulting in calling students timer handler).
-    - generates message to be sent (passed from later 5 to 4)
-
-THERE IS NOT REASON THAT ANY STUDENT SHOULD HAVE TO READ OR UNDERSTAND
-THE CODE BELOW. YOU SHOULD NOT TOUCH, OR REFERENCE (in your code) ANY
-OF THE DATA STRUCTURES BELOW. If you're interested in how I designed
-the emulator, you're welcome to look at the code - but again, you should have
-to, and you definitely should not have to modify
-*********************************************************************************/
+// ************************ NETWORK EMULATION CODE STARTS BELOW *************************
+// The code below emulates the layer 3 and below network environment:
+//      - emulates the transmission and delivery (possibly with bit-level corruption
+//          and packet loss) of packets across the layer 3/4 interface
+//      - handles the starting/stopping of a timer, and generates timer
+//          interrupts (resulting in calling students timer handler).
+//      - generates message to be sent (passed from later 5 to 4)
+//
+// THERE IS NOT REASON THAT ANY STUDENT SHOULD HAVE TO READ OR UNDERSTAND
+// THE CODE BELOW. YOU SHOULD NOT TOUCH, OR REFERENCE (in your code) ANY
+// OF THE DATA STRUCTURES BELOW. If you're interested in how I designed
+// the emulator, you're welcome to look at the code - but again, you should have
+// to, and you definitely should not have to modify
+// **************************************************************************************
 
 struct event {
 	float evtime;       // Event time
@@ -293,9 +290,9 @@ float jimsrand(void) {
 	return (x);
 }
 
-/********************* EVENT HANDLING ROUTINES *********************/
-/********** The next set of routines handle the event list *********/
-/*******************************************************************/
+// ******************************* EVENT HANDLING ROUTINES ******************************
+// ******************* The next set of routines handle the event list *******************
+// **************************************************************************************
 
 void generate_next_arrival(void) {
 	double x, log(), ceil();
@@ -365,7 +362,7 @@ void printevlist(void) {
 	printf("--------------\n");
 }
 
-/********************** Student-callable ROUTINES **********************/
+// ****************************** STUDENT-CALLABLE ROUTINES *****************************
 
 /**
  * Called by students routine to cancel a previously-started timer.
@@ -404,7 +401,6 @@ void stoptimer(int AorB) {
 }
 
 /**
- *
  * @param AorB A or B is trying to start timer.
  * @param increment
  */
@@ -430,7 +426,12 @@ void starttimer(int AorB, float increment) {
 	insertevent(evptr);
 }
 
-/************************** TOLAYER3 **************************/
+// ************************************** TOLAYER3 **************************************
+/**
+ * Sends a packet to layer 3.
+ * @param AorB If 0, then the calling entity is A. If 1, then B is the calling entity.
+ * @param packet The packet to be sent.
+ */
 void tolayer3(int AorB, struct pkt packet) {
 	struct pkt *mypktptr;
 	struct event *evptr, *q;
@@ -464,7 +465,7 @@ void tolayer3(int AorB, struct pkt packet) {
 
 	// Create future event for arrival of packet at the other side
 	evptr = (struct event *) malloc(sizeof(struct event));
-	evptr->evtype = FROM_LAYER3;      // Oacket will pop out from layer3
+	evptr->evtype = FROM_LAYER3;      // Packet will pop out from layer3
 	evptr->eventity = (AorB + 1) % 2; // Event occurs at other entity
 	evptr->pktptr = mypktptr;         // Save ptr to my copy of packet
 
@@ -494,6 +495,12 @@ void tolayer3(int AorB, struct pkt packet) {
 	insertevent(evptr);
 }
 
+// ************************************** TOLAYER5 **************************************
+/**
+ * Sends data to layer 5.
+ * @param AorB Currently unused.
+ * @param datasent The data to be sent.
+ */
 void tolayer5(int AorB, char datasent[20]) {
 	int i;
 	if (TRACE > 2) {
