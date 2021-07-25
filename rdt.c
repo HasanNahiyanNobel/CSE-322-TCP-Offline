@@ -98,7 +98,12 @@ void B_output (struct msg message) {
  * @param packet
  */
 void A_input (struct pkt packet) {
-
+	if (packet.acknum==1) {
+		printf("A packet has been acknowledged. Yey!\n"); // TODO: Elaborate and formalize.
+	}
+	else {
+		printf("Packet returned without being acknowledged.\n"); // TODO: Remove this line.
+	}
 }
 
 /**
@@ -126,10 +131,15 @@ void B_input (struct pkt packet) {
 	}
 
 	if (packet.seqnum==g_seqnum_of_b + 1) {
+		printf("Everything is okay!\n"); // TODO: Remove this debug line.
 		g_seqnum_of_b++;
 
-		//Send acknowledgement
-		printf("Everything is okay!\n"); // TODO: Remove this debug line.
+		// Send data to layer 5
+		tolayer5(1, message.data);
+
+		// Send acknowledgement to A
+		packet.acknum = 1; // Set acknowledgement to true.
+		tolayer3(1, packet);
 	}
 	else {
 		printf("Something is not okay.\n"); // TODO: Remove this debug line.
