@@ -19,15 +19,22 @@
 
 #define BIDIRECTIONAL 0 // Change to 1 if you're doing extra credit and write a routine called B_output
 
-// ********************************** GLOBAL VARIABLES **********************************
-/**
- * Size of data array in this simulation.
- */
+// *************************** GLOBAL CONSTANTS AND VARIABLES ***************************
+
+/** For my debug purposes. Any non-zero value will take debug inputs and print outputs. */
+const int kDebugMode = 1;
+
+/** Name of input file in debug mode. */
+const char kDebugInputFile[25] = "debug_input.txt";
+
+/** Size of data array in this simulation. */
 const int kDataSize = 20;
-/**
- * Sequence number for A. Used by A_output.
- */
-int g_seqnum_of_a = 0;
+
+/** Sequence number for A. Used by A_output. Initially set to 1. */
+int g_seqnum_of_a = 1;
+
+/** Sequence number for B. Used by B_input. Initially set to 0—when no packet has arrived. */
+int g_seqnum_of_b = 0;
 
 /**
  * A "msg" is the data unit passed from layer 5 (teachers code) to layer 4 (students' code). It contains the data (characters) to be delivered to layer 5 via the students transport level protocol entities.
@@ -55,6 +62,8 @@ void stoptimer (int AorB);
 void tolayer3 (int AorB, struct pkt packet);
 
 void tolayer5 (int AorB, char datasent[20]);
+
+void ReadInputFile ();
 
 // *********************** STUDENTS WRITE THE NEXT SEVEN ROUTINES ***********************
 
@@ -114,6 +123,16 @@ void B_input (struct pkt packet) {
 	struct msg message;
 	for (int i = 0; i<kDataSize; i++) {
 		message.data[i] = packet.payload[i];
+	}
+
+	if (packet.seqnum==g_seqnum_of_b + 1) {
+		g_seqnum_of_b++;
+
+		//Send acknowledgement
+		printf("Everything is okay!\n"); // TODO: Remove this debug line.
+	}
+	else {
+		printf("Something is not okay.\n"); // TODO: Remove this debug line.
 	}
 }
 
@@ -234,7 +253,8 @@ int main () {
 				else
 					B_output(msg2give);
 			}
-		} else if (eventptr->evtype==FROM_LAYER3) {
+		}
+		else if (eventptr->evtype==FROM_LAYER3) {
 			pkt2give.seqnum = eventptr->pktptr->seqnum;
 			pkt2give.acknum = eventptr->pktptr->acknum;
 			pkt2give.checksum = eventptr->pktptr->checksum;
@@ -245,12 +265,14 @@ int main () {
 			else
 				B_input(pkt2give);
 			free(eventptr->pktptr); // Free the memory for packet
-		} else if (eventptr->evtype==TIMER_INTERRUPT) {
+		}
+		else if (eventptr->evtype==TIMER_INTERRUPT) {
 			if (eventptr->eventity==A)
 				A_timerinterrupt();
 			else
 				B_timerinterrupt();
-		} else {
+		}
+		else {
 			printf("INTERNAL PANIC: unknown event type \n");
 		}
 		free(eventptr);
@@ -258,7 +280,7 @@ int main () {
 
 	terminate:
 	printf(
-		" Simulator terminated at time %f\n after sending %d msgs from layer5\n",
+		"\nSimulator terminated at time %f\nafter sending %d msgs from layer5.\n",
 		time, nsim);
 }
 
@@ -270,22 +292,22 @@ void init () {
 	float sum, avg;
 	float jimsrand ();
 
-	printf("-------- Stop and Wait Network Simulator Version 1.1 --------\n\n");
-	printf("Enter the number of messages to simulate: ");
-	//scanf("%d", &nsimmax); // TODO: Uncomment this.
-	nsimmax = 2; //TODO: Remove this line.
-	printf("Enter packet loss probability [enter 0.0 for no loss]:");
-	//scanf("%f", &lossprob); // TODO: Uncomment this
-	lossprob = 0; //TODO: Remove this line.
-	printf("Enter packet corruption probability [0.0 for no corruption]:");
-	//scanf("%f", &corruptprob); // TODO: Uncomment this
-	corruptprob = 0; //TODO: Remove this line.
-	printf("Enter average time between messages from sender's layer5 [ > 0.0]:");
-	//scanf("%f", &lambda); // TODO: Uncomment this
-	lambda = 1000; //TODO: Remove this line.
-	printf("Enter TRACE:");
-	//scanf("%d", &TRACE); // TODO: Uncomment this
-	TRACE = 3; //TODO: Remove this line.
+	if (kDebugMode==1) {
+		ReadInputFile();
+	}
+	else {
+		printf("-------- Stop and Wait Network Simulator Version 1.1 --------\n\n");
+		printf("Enter the number of messages to simulate: ");
+		scanf("%d", &nsimmax);
+		printf("Enter packet loss probability [enter 0.0 for no loss]:");
+		scanf("%f", &lossprob);
+		printf("Enter packet corruption probability [0.0 for no corruption]:");
+		scanf("%f", &corruptprob);
+		printf("Enter average time between messages from sender's layer5 [ > 0.0]:");
+		scanf("%f", &lambda);
+		printf("Enter TRACE:");
+		scanf("%d", &TRACE);
+	}
 
 	srand(9999); // Initialize random number generator
 	sum = 0.0; // Test random number generator for students */
@@ -355,7 +377,8 @@ void insertevent (struct event *p) {
 		evlist = p;
 		p->next = NULL;
 		p->prev = NULL;
-	} else {
+	}
+	else {
 		for (qold = q; q!=NULL && p->evtime>q->evtime; q = q->next)
 			qold = q;
 		if (q==NULL) {
@@ -363,13 +386,15 @@ void insertevent (struct event *p) {
 			qold->next = p;
 			p->prev = qold;
 			p->next = NULL;
-		} else if (q==evlist) {
+		}
+		else if (q==evlist) {
 			// Front of list
 			p->next = evlist;
 			p->prev = NULL;
 			p->next->prev = p;
 			evlist = p;
-		} else {
+		}
+		else {
 			// Middle of list
 			p->next = q;
 			p->prev = q->prev;
@@ -408,14 +433,17 @@ void stoptimer (int AorB) {
 			if (q->next==NULL && q->prev==NULL) {
 				// Remove first and only event on list
 				evlist = NULL;
-			} else if (q->next==NULL) {
+			}
+			else if (q->next==NULL) {
 				// End of list - there is one in front
 				q->prev->next = NULL;
-			} else if (q==evlist) {
+			}
+			else if (q==evlist) {
 				// Front of list - there must be event after
 				q->next->prev = NULL;
 				evlist = q->next;
-			} else {
+			}
+			else {
 				// Middle of list
 				q->next->prev = q->prev;
 				q->prev->next = q->next;
@@ -535,4 +563,40 @@ void tolayer5 (int AorB, char datasent[20]) {
 			printf("%c", datasent[i]);
 		printf("\n");
 	}
+}
+
+/**
+ * Reads input file in debug mode.
+ */
+void ReadInputFile () {
+	FILE *fp;
+	char line[1000];
+	fp = fopen(kDebugInputFile, "r");
+
+	if (fp==NULL) {
+		printf("Error while reading input file.\n");
+		exit(EXIT_FAILURE);
+	}
+	else {
+		fgets(line, sizeof(line), fp);
+
+		fgets(line, sizeof(line), fp);
+		nsimmax = atoi(line);
+
+		fgets(line, sizeof(line), fp);
+		lossprob = atof(line);
+
+		fgets(line, sizeof(line), fp);
+		corruptprob = atof(line);
+
+		fgets(line, sizeof(line), fp);
+		lambda = atof(line);
+
+		fgets(line, sizeof(line), fp);
+		TRACE = atoi(line);
+
+		printf("%d\n%f\n%f\n%f\n%d\n", nsimmax, lossprob, corruptprob, lambda, TRACE);
+	}
+
+	fclose(fp);
 }
