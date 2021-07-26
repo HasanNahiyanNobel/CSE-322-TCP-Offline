@@ -30,6 +30,12 @@ const char kDebugInputFile[25] = "debug_input.txt";
 /** Size of data array in this simulation. */
 const int kDataSize = 20;
 
+/** Character to be sent in the payload of an acknowledgement packet. */
+const char kAckChar = 6;
+
+/** Character to be sent in the payload of an non-acknowledgement packet. */
+const char kNackChar = 21;
+
 /** Sequence number for A. Used by A_output. Initially set to 1. */
 int g_seqnum_of_a = 1;
 
@@ -63,6 +69,8 @@ void tolayer3 (int AorB, struct pkt packet);
 
 void tolayer5 (int AorB, char datasent[20]);
 
+int CalculateCheckSum (struct pkt packet);
+
 void ReadInputFile ();
 
 // *********************** STUDENTS WRITE THE NEXT SEVEN ROUTINES ***********************
@@ -76,11 +84,8 @@ void A_output (struct msg message) {
 
 	packet.seqnum = g_seqnum_of_a++;    // Sets current seqnum and increases the global value.
 	packet.acknum = 0;                  // Zero when NOT acknowledged.
-	packet.checksum = 0;                // Initially set to zero, incremented in loop below.
-	for (int i = 0; i<kDataSize; i++) {
-		packet.checksum += message.data[i];
-		packet.payload[i] = message.data[i];
-	}
+	for (int i = 0; i<kDataSize; i++) packet.payload[i] = message.data[i];
+	packet.checksum = CalculateCheckSum(packet);
 
 	tolayer3(0, packet);
 }
@@ -99,10 +104,19 @@ void B_output (struct msg message) {
  */
 void A_input (struct pkt packet) {
 	if (packet.acknum==1) {
-		printf("A packet has been acknowledged. Yey!\n"); // TODO: Elaborate and formalize.
+		{
+			// TODO: Remove this debug block.
+			printf("A packet has been acknowledged. Yey!\n");
+			printf("%d, %d, %d\n", packet.seqnum, packet.acknum, packet.checksum);
+			for (int i = 0; i<kDataSize; i++) printf("%c", packet.payload[i]);
+			printf("\n");
+		}
 	}
 	else {
-		printf("Packet returned without being acknowledged.\n"); // TODO: Remove this line.
+		{
+			// TODO: Remove this debug block.
+			printf("Packet returned without being acknowledged.\n");
+		}
 	}
 }
 
@@ -137,9 +151,13 @@ void B_input (struct pkt packet) {
 		// Send data to layer 5
 		tolayer5(1, message.data);
 
-		// Send acknowledgement to A
-		packet.acknum = 1; // Set acknowledgement to true.
-		tolayer3(1, packet);
+		// Send ack_packet to A
+		struct pkt ack_packet;
+		ack_packet.seqnum = packet.seqnum;
+		ack_packet.acknum = 1; // Set acknowledgement to true.
+		for (int i = 0; i<kDataSize; i++) ack_packet.payload[i] = kAckChar;
+		ack_packet.checksum = CalculateCheckSum(ack_packet);
+		tolayer3(1, ack_packet);
 	}
 	else {
 		printf("Something is not okay.\n"); // TODO: Remove this debug line.
@@ -576,6 +594,17 @@ void tolayer5 (int AorB, char datasent[20]) {
 }
 
 /**
+ * Calculates and returns the checksum of a packet.
+ * @param packet The packet of which the checksum is being calculated.
+ * @return Checksum for the packet.
+ */
+int CalculateCheckSum (struct pkt packet) {
+	int checksum = packet.seqnum + packet.acknum;
+	for (int i = 0; i<kDataSize; i++) checksum += packet.payload[i];
+	return checksum;
+}
+
+/**
  * Reads input file in debug mode.
  */
 void ReadInputFile () {
@@ -605,7 +634,12 @@ void ReadInputFile () {
 		fgets(line, sizeof(line), fp); // Read TRACE.
 		TRACE = atoi(line);
 
-		printf("nsimmax: %d\nlossprob: %f\ncorruptprob: %f\nlambda: %f\nTRACE: %d\n", nsimmax, lossprob, corruptprob, lambda, TRACE);
+		printf("nsimmax: %d\nlossprob: %f\ncorruptprob: %f\nlambda: %f\nTRACE: %d\n",
+		       nsimmax,
+		       lossprob,
+		       corruptprob,
+		       lambda,
+		       TRACE);
 	}
 
 	fclose(fp);
