@@ -588,24 +588,24 @@ void ReadInputFile () {
 		exit(EXIT_FAILURE);
 	}
 	else {
-		fgets(line, sizeof(line), fp);
+		fgets(line, sizeof(line), fp); // Ignore the first line.
 
-		fgets(line, sizeof(line), fp);
+		fgets(line, sizeof(line), fp); // Read nsimmax.
 		nsimmax = atoi(line);
 
-		fgets(line, sizeof(line), fp);
+		fgets(line, sizeof(line), fp); // Read lossprob.
 		lossprob = atof(line);
 
-		fgets(line, sizeof(line), fp);
+		fgets(line, sizeof(line), fp); // Read corruptprob.
 		corruptprob = atof(line);
 
-		fgets(line, sizeof(line), fp);
+		fgets(line, sizeof(line), fp); // Read lambda.
 		lambda = atof(line);
 
-		fgets(line, sizeof(line), fp);
+		fgets(line, sizeof(line), fp); // Read TRACE.
 		TRACE = atoi(line);
 
-		printf("%d\n%f\n%f\n%f\n%d\n", nsimmax, lossprob, corruptprob, lambda, TRACE);
+		printf("nsimmax: %d\nlossprob: %f\ncorruptprob: %f\nlambda: %f\nTRACE: %d\n", nsimmax, lossprob, corruptprob, lambda, TRACE);
 	}
 
 	fclose(fp);
