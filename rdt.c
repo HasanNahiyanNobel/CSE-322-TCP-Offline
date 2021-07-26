@@ -103,19 +103,25 @@ void B_output (struct msg message) {
  * @param packet
  */
 void A_input (struct pkt packet) {
-	if (packet.acknum==1) {
-		{
-			// TODO: Remove this debug block.
-			printf("A packet has been acknowledged. Yey!\n");
-			printf("%d, %d, %d\n", packet.seqnum, packet.acknum, packet.checksum);
-			for (int i = 0; i<kDataSize; i++) printf("%c", packet.payload[i]);
-			printf("\n");
-		}
+	if (packet.checksum!=CalculateCheckSum(packet)) {
+		// Packet got corrupted. Nothing to be done.
 	}
 	else {
-		{
-			// TODO: Remove this debug block.
-			printf("Packet %d has NOT been acknowledged.\n", packet.seqnum);
+		// Packet arrived correctly.
+		if (packet.acknum==1) {
+			{
+				// TODO: Remove this debug block.
+				printf("A packet has been acknowledged. Yey!\n");
+				printf("%d, %d, %d\n", packet.seqnum, packet.acknum, packet.checksum);
+				for (int i = 0; i<kDataSize; i++) printf("%c", packet.payload[i]);
+				printf("\n");
+			}
+		}
+		else {
+			{
+				// TODO: Remove this debug block.
+				printf("Packet %d has NOT been acknowledged.\n", packet.seqnum);
+			}
 		}
 	}
 }
@@ -157,9 +163,7 @@ void B_input (struct pkt packet) {
 			tolayer3(1, ack_or_nack_packet);
 
 			// And send the data to layer 5.
-			struct msg message;
-			for (int i = 0; i<kDataSize; i++) message.data[i] = packet.payload[i];
-			tolayer5(1, message.data);
+			tolayer5(1, packet.payload);
 		}
 		else {
 			// Packet is okay, but the sequence is not.
