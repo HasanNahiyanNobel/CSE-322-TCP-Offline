@@ -147,7 +147,10 @@ void B_input (struct pkt packet) {
 	if (packet.checksum==CalculateCheckSum(packet)) {
 		// Packet is NOT corrupted. Check sequence.
 		if (packet.seqnum==g_seqnum_of_b + 1) {
-			// Sequence is also okay. Send acknowledgement.
+			// Sequence is also okay. Increase the sequence number of B.
+			g_seqnum_of_b++;
+
+			// Send acknowledgement to A.
 			ack_or_nack_packet.acknum = 1; // 1 when acknowledged.
 			for (int i = 0; i<kDataSize; i++) ack_or_nack_packet.payload[i] = kAckChar;
 			ack_or_nack_packet.checksum = CalculateCheckSum(ack_or_nack_packet);
