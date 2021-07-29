@@ -73,6 +73,8 @@ int CalculateCheckSum (struct pkt packet);
 
 void ReadInputFile ();
 
+void PrintPacketDetails (struct pkt packet);
+
 // *********************** STUDENTS WRITE THE NEXT SEVEN ROUTINES ***********************
 
 /**
@@ -104,26 +106,14 @@ void B_output (struct msg message) {
  */
 void A_input (struct pkt packet) {
 	if (packet.checksum!=CalculateCheckSum(packet)) {
-		// Packet got corrupted. Nothing to be done.
+		printf("A packet got corrupted.\n");
 	}
 	else {
 		// Packet arrived correctly.
-		if (packet.acknum==1) {
-			{
-				// TODO: Remove this debug block.
-				printf("A packet has been acknowledged. Yey!\n");
-				printf("%d, %d, %d\n", packet.seqnum, packet.acknum, packet.checksum);
-				for (int i = 0; i<kDataSize; i++) printf("%c", packet.payload[i]);
-				printf("\n");
-			}
-		}
-		else {
-			{
-				// TODO: Remove this debug block.
-				printf("Packet %d has NOT been acknowledged.\n", packet.seqnum);
-			}
-		}
+		if (packet.acknum==1) printf("Packet #%d has been acknowledged.\n", packet.seqnum);
+		else printf("Packet #%d has NOT been acknowledged.\n", packet.seqnum);
 	}
+	PrintPacketDetails(packet);
 }
 
 /**
@@ -658,4 +648,14 @@ void ReadInputFile () {
 	}
 
 	fclose(fp);
+}
+
+/**
+ * Prints the details of a packet.
+ * @param packet The packet of which the details are to be printed.
+ */
+void PrintPacketDetails (struct pkt packet) {
+	printf("seqnum: %d, acknum: %d, checksum: %d\npayload: ", packet.seqnum, packet.acknum, packet.checksum);
+	for (int i = 0; i<kDataSize; i++) printf("%c", packet.payload[i]);
+	printf("\n");
 }
