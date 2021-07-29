@@ -30,10 +30,10 @@ const char kDebugInputFile[25] = "debug_input.txt";
 /** Size of data array in this simulation. */
 const int kDataSize = 20;
 
-/** Character to be sent in the payload of an acknowledgement packet. */
+/** Character to be sent in the payload of an acknowledgement packet (6 is the ASCII character for acknowledgement). */
 const char kAckChar = 6;
 
-/** Character to be sent in the payload of an non-acknowledgement packet. */
+/** Character to be sent in the payload of an non-acknowledgement packet (21 is the ASCII character for negative acknowledgement). */
 const char kNackChar = 21;
 
 /** Sequence number for A. Used by A_output. Initially set to 1. */
@@ -73,6 +73,8 @@ int CalculateCheckSum (struct pkt packet);
 
 void ReadInputFile ();
 
+void PrintPacketDetails (struct pkt packet);
+
 // *********************** STUDENTS WRITE THE NEXT SEVEN ROUTINES ***********************
 
 /**
@@ -103,21 +105,15 @@ void B_output (struct msg message) {
  * @param packet
  */
 void A_input (struct pkt packet) {
-	if (packet.acknum==1) {
-		{
-			// TODO: Remove this debug block.
-			printf("A packet has been acknowledged. Yey!\n");
-			printf("%d, %d, %d\n", packet.seqnum, packet.acknum, packet.checksum);
-			for (int i = 0; i<kDataSize; i++) printf("%c", packet.payload[i]);
-			printf("\n");
-		}
+	if (packet.checksum!=CalculateCheckSum(packet)) {
+		printf("A packet got corrupted.\n");
 	}
 	else {
-		{
-			// TODO: Remove this debug block.
-			printf("Packet returned without being acknowledged.\n");
-		}
+		// Packet arrived correctly.
+		if (packet.acknum==1) printf("Packet #%d has been acknowledged.\n", packet.seqnum);
+		else printf("Packet #%d has NOT been acknowledged.\n", packet.seqnum);
 	}
+	PrintPacketDetails(packet);
 }
 
 /**
@@ -139,28 +135,37 @@ void A_init (void) {
  * @param packet The packet which arrived.
  */
 void B_input (struct pkt packet) {
-	struct msg message;
-	for (int i = 0; i<kDataSize; i++) {
-		message.data[i] = packet.payload[i];
-	}
+	// Create a packet to send as ack or nack.
+	struct pkt ack_or_nack_packet;
+	ack_or_nack_packet.seqnum = packet.seqnum;
 
-	if (packet.seqnum==g_seqnum_of_b + 1) {
-		printf("Everything is okay!\n"); // TODO: Remove this debug line.
-		g_seqnum_of_b++;
+	// Check corruption.
+	if (packet.checksum==CalculateCheckSum(packet)) {
+		// Packet is NOT corrupted. Check sequence.
+		if (packet.seqnum==g_seqnum_of_b + 1) {
+			// Sequence is also okay. Increase the sequence number of B.
+			g_seqnum_of_b++;
 
-		// Send data to layer 5
-		tolayer5(1, message.data);
+			// Send acknowledgement to A.
+			ack_or_nack_packet.acknum = 1; // 1 when acknowledged.
+			for (int i = 0; i<kDataSize; i++) ack_or_nack_packet.payload[i] = kAckChar;
+			ack_or_nack_packet.checksum = CalculateCheckSum(ack_or_nack_packet);
+			tolayer3(1, ack_or_nack_packet);
 
-		// Send ack_packet to A
-		struct pkt ack_packet;
-		ack_packet.seqnum = packet.seqnum;
-		ack_packet.acknum = 1; // Set acknowledgement to true.
-		for (int i = 0; i<kDataSize; i++) ack_packet.payload[i] = kAckChar;
-		ack_packet.checksum = CalculateCheckSum(ack_packet);
-		tolayer3(1, ack_packet);
+			// And send the data to layer 5.
+			tolayer5(1, packet.payload);
+		}
+		else {
+			// Packet is okay, but the sequence is not.
+			// TODO: Implement this case.
+		}
 	}
 	else {
-		printf("Something is not okay.\n"); // TODO: Remove this debug line.
+		// Packet got corrupted. Send non-acknowledgement.
+		ack_or_nack_packet.acknum = 0; // 0 when not acknowledged.
+		for (int i = 0; i<kDataSize; i++) ack_or_nack_packet.payload[i] = kNackChar;
+		ack_or_nack_packet.checksum = CalculateCheckSum(ack_or_nack_packet);
+		tolayer3(1, ack_or_nack_packet);
 	}
 }
 
@@ -643,4 +648,14 @@ void ReadInputFile () {
 	}
 
 	fclose(fp);
+}
+
+/**
+ * Prints the details of a packet.
+ * @param packet The packet of which the details are to be printed.
+ */
+void PrintPacketDetails (struct pkt packet) {
+	printf("seqnum: %d, acknum: %d, checksum: %d\npayload: ", packet.seqnum, packet.acknum, packet.checksum);
+	for (int i = 0; i<kDataSize; i++) printf("%c", packet.payload[i]);
+	printf("\n");
 }
